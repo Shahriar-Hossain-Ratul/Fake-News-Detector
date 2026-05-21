@@ -7,22 +7,19 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
-# NLTK ডাউনলোড
+# NLTK রিসোর্স ডাউনলোড
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-# অ্যাপের শিরোনাম ও ডিজাইন
 st.set_page_config(page_title="Fake News Detector", page_icon="📰", layout="centered")
 st.title("📰 Fake News Detector")
 st.write("Enter a news article below to check if it's Real or Fake.")
 
-# ব্যাকএন্ডে ডেটা লোড ও মডেল ট্রেইন করা
 @st.cache_resource
 def load_and_train():
-    # গিটহাবে আপলোড করা নিজস্ব ছোট ফাইলটি রিড করা
+    # শাফেলড ডেটা রিড করা
     df = pd.read_csv('cleaned_news_sample.csv')
     
-    # ডেটা সোর্সে যদি total_text বা cleaned না থাকে তার সেফটি হ্যান্ডলিং
     if 'total_text' not in df.columns:
         df['total_text'] = df['title'] + " " + df['text']
     
@@ -36,16 +33,18 @@ def load_and_train():
     
     df['cleaned'] = df['total_text'].apply(clean)
     
-    vectorizer = TfidfVectorizer(max_features=3000)
+    # এন-গ্রাম (ngram_range) সহ ভেক্টরাইজার টিউনিং জাতে শব্দযুগল ভালো চেনে
+    vectorizer = TfidfVectorizer(max_features=5000, ngram_range=(1, 2))
     X = vectorizer.fit_transform(df['cleaned'])
     y = df['label']
     
-    model = LogisticRegression()
+    # রেগুলারাইজেশন সহ লজিস্টিক রিগ্রেশন
+    model = LogisticRegression(C=1.0, max_iter=1000)
     model.fit(X, y)
     
     return vectorizer, model, clean
 
-with st.spinner("Initializing AI Model... Please wait a moment."):
+with st.spinner("Initializing AI Model with balanced dataset... Please wait."):
     tfidf, lr_model, clean_func = load_and_train()
 
 user_input = st.text_area("Paste News Text Here:", height=200, placeholder="Type or paste the news content here...")
@@ -62,5 +61,6 @@ if st.button("Check Authenticity", type="primary"):
         if prediction == 1:
             st.error("🚨 ALERT: This looks like FAKE NEWS!")
         else:
+            st.success("✅ VERIFIED: This looks like REAL NEWS.")
             st.success("✅ VERIFIED: This looks like REAL NEWS.")
             st.success("✅ VERIFIED: This looks like REAL NEWS.")
