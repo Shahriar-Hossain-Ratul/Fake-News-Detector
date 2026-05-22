@@ -7,7 +7,6 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
-# NLTK ডাউনলোড
 nltk.download('stopwords')
 nltk.download('wordnet')
 
@@ -17,7 +16,7 @@ st.write("Enter a news article below to check if it's Real or Fake.")
 
 @st.cache_resource
 def train_perfect_model():
-    # কিছু শক্তিশালী রিয়েল এবং ফেক কি-ওয়ার্ড যুক্ত ডামি ডেটা তৈরি করা জাতে মডেল প্যাটার্ন বোঝে
+
     real_samples = [
         "Government officials announced a new economic framework today during the annual summit.",
         "NASA James Webb Space Telescope captured a stunning new image of a distant galaxy cluster.",
@@ -26,7 +25,7 @@ def train_perfect_model():
         "International Olympic Committee officially announced host cities for summer games.",
         "Researchers found a new treatment method in university medical trials published today.",
         "The prime minister signed a bilateral trade agreement to reduce tariffs on technology imports."
-    ] * 200  # গুণ করে সংখ্যা বাড়ানো হচ্ছে
+    ] * 200 
 
     fake_samples = [
         "SHOCKING: Secret government documents leaked online prove scientists built a time machine.",
@@ -39,7 +38,7 @@ def train_perfect_model():
     ] * 200
 
     texts = real_samples + fake_samples
-    labels = [0] * len(real_samples) + [1] * len(fake_samples)  # ০ = রিয়েল, ১ = ফেক (পারফেক্ট ৫০:৫০ ব্যালেন্স)
+    labels = [0] * len(real_samples) + [1] * len(fake_samples)  
 
     lemmatizer = WordNetLemmatizer()
     stop_words = set(stopwords.words('english'))
@@ -50,13 +49,12 @@ def train_perfect_model():
         return " ".join([lemmatizer.lemmatize(w) for w in text.split() if w not in stop_words])
     
     cleaned_texts = [clean(t) for t in texts]
-    
-    # ভেক্টরাইজার এবং লজিস্টিক রিগ্রেশন মডেল ট্রেইনিং
+
     vectorizer = TfidfVectorizer(max_features=2000, ngram_range=(1, 2))
     X = vectorizer.fit_transform(cleaned_texts)
     y = np.array(labels)
     
-    model = LogisticRegression(C=5.0)  # হাইপারপ্যারামিটার টিউনিং জাতে কি-ওয়ার্ড ভালো চেনে
+    model = LogisticRegression(C=5.0) 
     model.fit(X, y)
     
     return vectorizer, model, clean
